@@ -1,0 +1,89 @@
+<html>
+  <head> 
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" type="text/css" /> 
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular.min.js"></script>
+  </head>
+  <script>
+  var app = angular.module('app',[])
+
+function TodoCtrl($scope,TodoService) {
+ 
+  $scope.todos = [];
+  
+  TodoService.getTodoList().then(function(res){ 
+    $scope.todos = angular.isUndefined(res)?[]:res.data;
+  }).catch(function(){
+     $scope.todos = [];
+  });
+   
+  $scope.action = function(action, todo){
+    
+    TodoService.upsertTodo(todo).then(function(res){ 
+      $scope.todos = angular.isUndefined(res)?[]:res.data;
+    }).catch(function(){
+     $scope.todos = [];
+    });
+        
+  }
+  
+}
+
+function TodoService($http){
+  return {
+    getTodoList:function(){
+      //return $http.get('/getTodoList');
+      return $http.get('/getAllTasks');
+    },
+    upsertTodo:function(todo){
+      return $http({
+        method:'POST',
+        //url:'/upsertTodo',
+        url:'/addTask',
+        data:todo});
+    }
+  };
+}
+app.controller('TodoCtrl',TodoCtrl);
+
+app.service('TodoService',TodoService);
+
+  </script>
+  <style>
+  	.done {text-decoration: line-through;}
+  </style>
+  <body  ng-app="app">
+    <div class="todo-app" ng-controller="TodoCtrl">
+      
+      <div class="container">
+        <div class="row">          
+            <div class="col-md-10 col-sm-8 col-xs-9"> 
+                <div class="form-group">
+                   <input class="form-control" placeholder="I need to..." type="text" ng-model="newTodo.text" ng-model-instant />
+                </div> 
+            </div>
+            <div class="col-md-2 col-sm-4 col-xs-3">              
+                <div class="form-group">
+                  <button class="btn btn-primary btn-block" ng-click="action('add',newTodo)">Add</button>  
+                </div> 
+            </div> 
+        </div>
+      
+        <div class="row">
+          <div class="col-md-12">         
+             <h2>You've got <span class="emphasis">{{getTotalTodos()}}</span> things to do</h2>
+          </div>          
+          <ul class="nav nav-stacked">
+            <li ng-repeat="todo in todos">
+              <input type="checkbox" ng-model="todo.done" ng-change="action('update',todo)"/>
+              <span ng-class="{'done':todo.done}" >
+                {{todo.text}} 
+               </span>
+               <span ng-if="todo.done" style="margin-left:15px;">Completed</span><span ng-if="!todo.done" style="margin-left:15px;">In progress</span>
+            </li>
+          </ul>
+        </div> 
+        
+      </div>         
+    </div>
+  </body>  
+</html>
